@@ -6,20 +6,22 @@
 #include <sys/param.h>
 #include "esp_netif.h"
 #include "esp_wifi.h"
-#include "esp_tls_crypto.h"
 #include <esp_http_server.h>
 #include "esp_event.h"
 #include "esp_netif.h"
 #include "esp_tls.h"
+#include "motion_server.h"
 
-#define EXAMPLE_HTTP_QUERY_KEY_MAX_LEN  (64)
 
 static const char *TAG = "Server";
+static int count = 0;
 
 /* An HTTP GET handler */
 static esp_err_t detected_get_handler(httpd_req_t *req)
 {
-    ESP_LOGI(TAG, "detected");
+    count++;
+    ESP_LOGI(TAG, "detected %d times", count);
+
     const char* resp_str = "response";
     httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
@@ -29,6 +31,19 @@ static const httpd_uri_t detect = {
     .uri       = "/detected",
     .method    = HTTP_GET,
     .handler   = detected_get_handler,
+};
+static esp_err_t count_get_handler(httpd_req_t *req)
+{
+    char resp[32];
+    sprintf(resp, "detected %d times", count);
+    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
+static const httpd_uri_t counting = {
+    .uri       = "/",
+    .method    = HTTP_GET,
+    .handler   = count_get_handler,
 };
 
 static httpd_handle_t start_webserver(void)
@@ -44,7 +59,7 @@ static httpd_handle_t start_webserver(void)
         // Set URI handlers
         ESP_LOGI(TAG, "Registering URI handlers");
         httpd_register_uri_handler(server, &detect);
-
+        httpd_register_uri_handler(server, &counting);
         return server;
     }
 
@@ -64,13 +79,9 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
     }
 }
 
-void app_main(void)
+void wifi_init()
 {
     esp_err_t err = ESP_FAIL;
-
-    ESP_ERROR_CHECK(nvs_flash_init());
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     // Create the default AP network interface
     esp_netif_create_default_wifi_ap(); 
@@ -100,6 +111,11 @@ void app_main(void)
 
     // Register event handler for Wi-Fi events
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
+}
+
+void Server_task(void *param)
+{
+    wifi_init();
 
     start_webserver();
 

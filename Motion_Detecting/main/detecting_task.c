@@ -9,10 +9,14 @@
 #include "esp_netif.h"
 #include "esp_event.h"
 
-#define PIR_SENSOR_PIN GPIO_NUM_27
-#define SERVER_URL "http://192.168.4.1/detected"  // 서버의 IP 주소와 경로를 설정하세요.
+#include "detecting_task.h"
 
-const static char *TAG = "Sensor Test";
+const static char *TAG = "det_task";
+
+void Sensor_Init(void);
+esp_err_t send_http_request(const char *url);
+void Sensor_Task(void* param);
+void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 
 // Sensor 초기화
 void Sensor_Init(void)
@@ -26,7 +30,6 @@ void Sensor_Init(void)
     gpio_config(&io_conf);
 }
 
-// HTTP 클라이언트 요청을 보내는 함수
 esp_err_t send_http_request(const char *url)
 {
     esp_http_client_config_t config = {
@@ -67,8 +70,9 @@ void Sensor_Task(void* param)
     }
 }
 
+
 // Wi-Fi 이벤트 핸들러
-static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
+void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
 {
     if(event_base == WIFI_EVENT)
     {
@@ -85,52 +89,5 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
                 ESP_LOGI(TAG, "Connected");
                 break;
         }
-    }
-}
-
-void app_main(void)
-{
-  //nvs 설정
-    esp_err_t ret = nvs_flash_init ();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
-    {
-        ESP_ERROR_CHECK (nvs_flash_erase ());
-        ret = nvs_flash_init ();
-    }
-    ESP_ERROR_CHECK (ret);
-
-  // event loop 설정
-    ESP_ERROR_CHECK (esp_event_loop_create_default ());
-
-  // 네트워크 인터페이스 설정
-    ESP_ERROR_CHECK (esp_netif_init ());
-
-    // Wi-Fi STA 설정
-    esp_netif_create_default_wifi_sta();
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
-    wifi_config_t wifi_sta_config = { };
-
-    strcpy ((char *) wifi_sta_config.sta.ssid, "ESP32_Detect");
-    strcpy ((char *) wifi_sta_config.sta.password, "12345678");
-
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_sta_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
-    // Wi-Fi 이벤트 핸들러 등록
-
-
-    // PIR 센서 초기화
-    Sensor_Init();
-    ESP_LOGI(TAG, "Sensor ready");
-
-    // Sensor_Task를 생성하여 PIR 센서를 감지합니다.
-    xTaskCreate(Sensor_Task, "motion_sensor_task", 4096, NULL, 5, NULL);
-
-    // 메인 루프
-    while(1)
-    {
-        vTaskDelay(pdMS_TO_TICKS(1000UL)); // 1초 대기
     }
 }

@@ -5,6 +5,8 @@ if(${target} STREQUAL "linux")
     list(APPEND requires esp_stubs esp-tls esp_http_server protocol_examples_common nvs_flash)
 endif()
 idf_component_register(SRCS "motion_server.c"
+                            "motion_main.c"
                     INCLUDE_DIRS "."
                     EMBED_FILES "index/index.html"
+                                "motion_server.h"
                     REQUIRES ${requires})
