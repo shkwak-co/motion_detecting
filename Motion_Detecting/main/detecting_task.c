@@ -10,6 +10,8 @@
 #include "esp_event.h"
 
 #include "detecting_task.h"
+#include "buzzer_task.h"
+#include "light_task.h"
 
 const static char *TAG = "det_task";
 
@@ -41,6 +43,8 @@ esp_err_t send_http_request(const char *url)
 
     if (err == ESP_OK) {
         ESP_LOGI(TAG, "HTTP GET request succeeded");
+        buzzer_function();
+        // light_function();
     } else {
         ESP_LOGE(TAG, "HTTP GET request failed: %s", esp_err_to_name(err));
     }

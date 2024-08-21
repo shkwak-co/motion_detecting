@@ -16,6 +16,7 @@
     "idf.toolsPathWin": "d:\\esp\\espressif",
     "idf.flashType": "UART",
     "files.associations": {
-        "freertos.h": "c"
+        "freertos.h": "c",
+        "buzzer_task.h": "c"
     }
 }

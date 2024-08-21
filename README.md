@@ -7,3 +7,10 @@ board
 
 sensors
   - HC-SR501 PIR
+
+
++ additional plan
+1. MODBUS environment
+2. one more board for buzzer
+3. LED flashing
+4. camera (after I check/fix esp32-cam board)
