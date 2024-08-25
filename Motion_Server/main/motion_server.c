@@ -126,6 +126,9 @@ void Server_task(void *param)
 
     while(1)
     {
+        /**
+         * 감지했을 때 task가 할 동작
+         */
         vTaskDelay(pdMS_TO_TICKS(1000UL));
     }
 }

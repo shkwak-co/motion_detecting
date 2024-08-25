@@ -17,6 +17,11 @@ void app_main(void)
 {
     net_init();
 
+    /**
+     * #TODO
+     * MODBUS - Master
+     * 
+     */
     xTaskCreate(Server_task, "server", 1024*10, NULL, 5, NULL);
     while(1)
     {
